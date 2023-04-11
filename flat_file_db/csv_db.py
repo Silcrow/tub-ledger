@@ -15,23 +15,39 @@ class CsvDb:
         with open(self.filename, 'a', newline='') as file:
             pass  # create file if it doesn't exist
 
-    def write_csv(self, obj):
+    def upsert_csv(self, obj):
         """
-        :param obj: Account or Category object
+        :param obj: Account or Category object to upsert
         :return: updated csv
         """
+        # maybe prompt the user if row exists: "SCB Bank account exists. Do you want to rewrite this row?"
         if isinstance(obj, Account):
             filename = os.path.join(self.directory, 'accounts.csv')
-            with open(filename, 'a', newline='') as file:
+            with open(filename, 'r', newline='') as file:
+                reader = csv.reader(file)
+                rows = [row for row in reader]
+            for i, row in enumerate(rows):
+                if row[0] == obj.name:
+                    rows[i] = obj.to_csv_row()
+                    break
+            else:
+                rows.append(obj.to_csv_row())
+            with open(filename, 'w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(obj.to_csv_row())
+                writer.writerows(rows)
         elif isinstance(obj, Category):
             filename = os.path.join(self.directory, 'categories.csv')
-            with open(filename, 'a', newline='') as file:
+            with open(filename, 'r', newline='') as file:
+                reader = csv.reader(file)
+                rows = [row for row in reader]
+            for i, row in enumerate(rows):
+                if row[0] == obj.name:
+                    rows[i] = obj.to_csv_row()
+                    break
+            else:
+                rows.append(obj.to_csv_row())
+            with open(filename, 'w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(obj.to_csv_row())
+                writer.writerows(rows)
         else:
             raise ValueError("Unsupported object type")
-
-        # TODO it writes, but if you run code twice, it'll write scb_bank twice. Redo so that, if an account exists,
-        # then update instead of create. Make write_csv() into update_csv().

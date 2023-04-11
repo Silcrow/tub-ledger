@@ -18,9 +18,9 @@ if __name__ == "__main__":
     csv_db = CsvDb('categories.csv', directory='flat_database')
 
     scb_bank = Account('SCB Bank', 503.97, category=traditional_savings, remarks='has SCB Easy online access')
-    csv_db.write_csv(scb_bank)
+    csv_db.upsert_csv(scb_bank)
     k_bank = Account('K Bank', 145253, category=traditional_savings)
-    csv_db.write_csv(k_bank)
+    csv_db.upsert_csv(k_bank)
 
     # continue here --------------------------------------------------------------------#
 
