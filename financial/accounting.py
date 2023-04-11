@@ -52,6 +52,9 @@ class Category:
                 result['children'].append({'name': child.name, 'value': child.value})
         return result
 
+    def to_csv_row(self):
+        return [self.name, self.value, self.parent.name, self.description]
+
 
 class Account:
     """
@@ -63,6 +66,9 @@ class Account:
         self.category = category
         self.remarks = remarks
         category.add_child(self)
+
+    def to_csv_row(self):
+        return [self.name, self.value, self.category.name, self.remarks]
 
 
 def print_composite(data, indent=0):

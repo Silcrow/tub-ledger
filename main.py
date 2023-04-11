@@ -1,4 +1,5 @@
 from financial.accounting import Category, Account, print_balance_sheet
+from flat_file_db.csv_db import CsvDb
 
 
 if __name__ == "__main__":
@@ -13,8 +14,16 @@ if __name__ == "__main__":
 
     '''assume user creates accounts'''
     # Traditional Savings accounts
+    csv_db = CsvDb('accounts.csv', directory='flat_database')  # initialize CsvDb
+    csv_db = CsvDb('categories.csv', directory='flat_database')
+
     scb_bank = Account('SCB Bank', 503.97, category=traditional_savings, remarks='has SCB Easy online access')
+    csv_db.write_csv(scb_bank)
     k_bank = Account('K Bank', 145253, category=traditional_savings)
+    csv_db.write_csv(k_bank)
+
+    # continue here --------------------------------------------------------------------#
+
     bkk_bank = Account('BKK Bank', 90744, category=traditional_savings)
     kt_bank = Account('KT Bank', 42287, category=traditional_savings)
     gh_bank = Account('GH Bank (partnered savings)', 19377, category=traditional_savings, remarks='50% of 38,754')
@@ -51,4 +60,3 @@ if __name__ == "__main__":
 
     # TODO each time category or account object is created, save it as record in csv.
     # TODO now create a a function that would read from the csv's and python print a json version of the balance sheet.
-
