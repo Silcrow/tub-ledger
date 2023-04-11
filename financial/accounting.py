@@ -1,7 +1,4 @@
 
-import json
-
-
 class Category:
     """
     Represents calculated values in financial statements such as assets, current assets, fixed assets, liabilities, etc.
