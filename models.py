@@ -30,7 +30,7 @@ class SqliteDb:
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS accounts (
                 id INTEGER PRIMARY KEY,
-                name TEXT NOT NULL,
+                name TEXT NOT NULL UNIQUE,
                 value REAL NOT NULL,
                 category_id INTEGER NOT NULL,
                 remarks TEXT,
@@ -73,5 +73,25 @@ class SqliteDb:
         """
         Upserts the given Account object to the accounts table.
         """
-        # TODO
-        pass
+        # Check if category exists
+        category_query = "SELECT id FROM categories WHERE name = ?"
+        self.cursor.execute(category_query, (account.category.name,))
+        category_row = self.cursor.fetchone()
+        if category_row:
+            category_id = category_row[0]
+        else:
+            raise ValueError("Category does not exist in the database")
+
+        # Insert or update account record
+        query = """
+            INSERT INTO accounts (name, value, category_id, remarks)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT (name) DO UPDATE SET
+                value = excluded.value,
+                category_id = excluded.category_id,
+                remarks = excluded.remarks
+        """
+        values = (account.name, account.value, category_id, account.remarks)
+        self.cursor.execute(query, values)
+        self.connection.commit()
+
