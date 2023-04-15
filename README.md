@@ -85,3 +85,6 @@ if __name__ == "__main__":
 
     print_balance_sheet(assets, liabilities)  # python print as balance sheet
 ```
+
+## To Self
+- make sure to add Assets and Liabilities category at any initial run, so that adding an account and not finding categories is impossible.

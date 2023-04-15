@@ -85,6 +85,7 @@ def print_composite(data, indent=0):
 
 
 def print_balance_sheet(assets, liabilities):
+    # TODO adjust this code to handle both obj in mem and from sql
     print('Balance Sheet (as of March 4,2023)')  # will need to timestamp and save each balance sheet.
     assets_copy = assets.to_dict()
     print_composite(assets_copy)

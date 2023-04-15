@@ -95,3 +95,46 @@ class SqliteDb:
         self.cursor.execute(query, values)
         self.connection.commit()
 
+    # didn't grok this fnc, but it answers.
+    def read_categories(self, name=None):
+        """
+        Returns a nested dict from categories and accounts databases.
+        :param name: name of category i.e. Assets, Liabilities, etc.
+        :return: nested dict
+        """
+        categories_query = "SELECT id, name, value FROM categories WHERE name=?"
+        accounts_query = "SELECT id, name, value, remarks FROM accounts WHERE category_id=?"
+        cursor = self.connection.cursor()
+
+        result = {'name': None, 'value': 0.0, 'children': []}
+
+        # Select the category with the given name
+        cursor.execute(categories_query, (name,))
+        category = cursor.fetchone()
+        if category is None:
+            raise ValueError("No category found with name {}".format(name))
+        result['name'] = category[1]
+        result['value'] = category[2]
+
+        # Select child categories
+        cursor.execute("SELECT id, name, value FROM categories WHERE parent_id=?", (category[0],))
+        child_categories = cursor.fetchall()
+
+        # Recursively call read_categories for each child category and add resulting nested dict to children array
+        for child_category in child_categories:
+            result['children'].append(self.read_categories(name=child_category[1]))
+
+        # Select child accounts
+        cursor.execute(accounts_query, (category[0],))
+        child_accounts = cursor.fetchall()
+
+        # Add a nested dict to children array for each child account
+        for child_account in child_accounts:
+            result['children'].append({
+                'name': child_account[1],
+                'value': child_account[2],
+                'remarks': child_account[3]
+            })
+
+        return result
+
