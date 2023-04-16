@@ -40,6 +40,54 @@ class SqliteDb:
 
         self.connection.commit()
 
+    def calculate_category_value(self, category_id):
+        """
+        Calculate category value based on values of all its child categories and accounts.
+        :param category_id: id of category
+        :return: updated database
+        """
+        print('calculate category value triggered.')
+        # fetch current value
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT value FROM categories WHERE id=?", (category_id,))
+        category_value = cursor.fetchone()[0]
+
+        # sum values from all child accounts and categories
+        cursor.execute("SELECT value FROM accounts WHERE category_id=?", (category_id,))
+        child_account_values = [row[0] for row in cursor.fetchall()]
+        total_value = category_value + sum(child_account_values)
+        cursor.execute("SELECT value FROM categories WHERE parent_id=? AND parent_id IS NOT NULL", (category_id,))
+        child_category_values = [row[0] for row in cursor.fetchall()]
+        total_value += sum(child_category_values)
+
+        cursor.execute("UPDATE categories SET value=? WHERE id=?", (total_value, category_id))
+        self.connection.commit()
+
+    def calculate_every_category(self):
+        """
+        Get all category IDs, ordered by hierarchy depth, then calculate_category_value() to each.
+        """
+        # Reset all category values to 0 before calculating
+        self.cursor.execute("UPDATE categories SET value = 0")
+        self.connection.commit()
+
+        # Calculate category values in order of depth in the hierarchy tree
+        query = """
+            WITH RECURSIVE category_tree(id, name, value, parent_id, depth) AS (
+                SELECT id, name, value, parent_id, 0
+                FROM categories
+                WHERE parent_id IS NULL
+                UNION ALL
+                SELECT c.id, c.name, c.value, c.parent_id, ct.depth + 1
+                FROM categories c
+                JOIN category_tree ct ON c.parent_id = ct.id
+            )
+            SELECT id FROM category_tree ORDER BY depth DESC;
+        """
+        category_ids = [row[0] for row in self.cursor.execute(query)]
+        for category_id in category_ids:
+            self.calculate_category_value(category_id)
+
     def upsert_category(self, category):
         """
         Upserts the given Category object to the categories table.
@@ -68,6 +116,7 @@ class SqliteDb:
         values = (category.name, category.value, parent_id, category.description)
         self.cursor.execute(query, values)
         self.connection.commit()
+        self.calculate_every_category()
 
     def upsert_account(self, account):
         """
@@ -94,14 +143,16 @@ class SqliteDb:
         values = (account.name, account.value, category_id, account.remarks)
         self.cursor.execute(query, values)
         self.connection.commit()
+        self.calculate_every_category()
 
-    # didn't grok this fnc, but it answers.
+    # did not grok
     def read_categories(self, name=None):
         """
         Returns a nested dict from categories and accounts databases.
         :param name: name of category i.e. Assets, Liabilities, etc.
         :return: nested dict
         """
+        self.calculate_every_category()
         categories_query = "SELECT id, name, value FROM categories WHERE name=?"
         accounts_query = "SELECT id, name, value, remarks FROM accounts WHERE category_id=?"
         cursor = self.connection.cursor()
