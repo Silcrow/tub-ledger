@@ -129,5 +129,5 @@ dmypy.json
 .pyre/
 
 # tub ledger
-/flat_database/*
 /database/*
+tests/database/*

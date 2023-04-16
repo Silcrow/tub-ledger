@@ -46,7 +46,6 @@ class SqliteDb:
         :param category_id: id of category
         :return: updated database
         """
-        print('calculate category value triggered.')
         # fetch current value
         cursor = self.connection.cursor()
         cursor.execute("SELECT value FROM categories WHERE id=?", (category_id,))
