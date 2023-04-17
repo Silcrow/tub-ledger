@@ -1,9 +1,8 @@
-from tests.test_accounting import initialize_SqliteDb
+from tests.test_accounting import TestAccounting
 
 if __name__ == "__main__":
-    sqlite_db, assets, liabilities = initialize_SqliteDb()
-    print(sqlite_db, assets, liabilities)
-    # TODO make print_balance_sheet() work for sql data
+    test_accounting = TestAccounting()
+    test_accounting.test_print_balance_sheet()
 
     # TODO CLI input form for category, then for account
     # TODO provide "disable" bool to both category and account records. Edit all queries or db-read opr accordingly.

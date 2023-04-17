@@ -93,7 +93,14 @@ class TestAccounting(unittest.TestCase):
 
         insert_fixed_assets(sqlite_db, fixed_assets)
         insert_liabilities(sqlite_db, liabilities)
-        print_balance_sheet(assets, liabilities)  # python print as balance sheet
+        return sqlite_db, assets, liabilities
+
+    def test_print_balance_sheet(self):
+        print("\nTest with object input.")
+        sqlite_db, assets, liabilities = self.test_create_ledger()
+        print_balance_sheet(assets=assets, liabilities=liabilities)
+        print("\nTest with SQLite DB input.")
+        print_balance_sheet(sqlite_db=sqlite_db)
 
 
 if __name__ == '__main__':

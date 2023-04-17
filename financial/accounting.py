@@ -1,3 +1,5 @@
+from models import SqliteDb
+
 
 class Category:
     """
@@ -84,12 +86,26 @@ def print_composite(data, indent=0):
             print_composite(child, indent+1)
 
 
-def print_balance_sheet(assets, liabilities):
-    # TODO adjust this code to handle both obj in mem and from sql
-    print('Balance Sheet (as of March 4,2023)')  # will need to timestamp and save each balance sheet.
-    assets_copy = assets.to_dict()
-    print_composite(assets_copy)
-    liabilities_copy = liabilities.to_dict()
-    print_composite(liabilities_copy)
-    net_worth_calc = assets_copy['value'] - liabilities_copy['value']
-    print('Net Worth:', "{:,.2f}".format(net_worth_calc))
+def print_balance_sheet(assets=None, liabilities=None, sqlite_db=None):
+    if not sqlite_db and (not assets or not liabilities):
+        raise ValueError("Either 'sqlite_db' or both 'assets' and 'liabilities' must be provided")
+
+    if sqlite_db:
+        assets_dict = sqlite_db.read_categories(name='Assets')
+        liabilities_dict = sqlite_db.read_categories(name='Liabilities')
+    else:
+        # Use the assets and liabilities objects to create the balance sheet dict
+        assets_dict = assets.to_dict()
+        liabilities_dict = liabilities.to_dict()
+
+    balance_sheet_dict = {
+        'assets': assets_dict,
+        'liabilities': liabilities_dict,
+        'net_worth': assets_dict['value'] - liabilities_dict['value']
+    }
+
+    # Print the balance sheet from the balance_sheet_dict
+    print('Balance Sheet (as of March 4, 2023)')  # will need to timestamp and save each balance sheet.
+    print_composite(balance_sheet_dict['assets'])
+    print_composite(balance_sheet_dict['liabilities'])
+    print('Net Worth:', "{:,.2f}".format(balance_sheet_dict['net_worth']))
