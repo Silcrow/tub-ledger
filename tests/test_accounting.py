@@ -1,6 +1,6 @@
 import unittest
-from financial.accounting import Category, Account, print_balance_sheet
-from models import SqliteDb
+from models.accounting import Category, Account, print_balance_sheet
+from database import SqliteDb
 
 
 def initialize_SqliteDb():

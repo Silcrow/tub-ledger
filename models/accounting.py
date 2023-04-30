@@ -1,9 +1,9 @@
-from models import SqliteDb
+from database import SqliteDb
 
 
 class Category:
     """
-    Represents calculated values in financial statements such as assets, current assets, fixed assets, liabilities, etc.
+    Represents calculated values in models statements such as assets, current assets, fixed assets, liabilities, etc.
     as well as any custom subcategories.
     When user creates a category, instantiate an object from this class.
     """
@@ -57,7 +57,7 @@ class Category:
 
 class Account:
     """
-    Represents individual listings in a financial statement, such as cash in a bank or the value of a property.
+    Represents individual listings in a models statement, such as cash in a bank or the value of a property.
     """
     def __init__(self, name, value, category, remarks=None):
         self.name = name
