@@ -145,7 +145,7 @@ class SqliteDb:
         self.calculate_every_category()
 
     # did not grok
-    def read_categories(self, name=None):
+    def get_category_tree(self, name=None):
         """
         Returns a nested dict from categories and accounts databases.
         :param name: name of category i.e. Assets, Liabilities, etc.
@@ -170,9 +170,9 @@ class SqliteDb:
         cursor.execute("SELECT id, name, value FROM categories WHERE parent_id=?", (category[0],))
         child_categories = cursor.fetchall()
 
-        # Recursively call read_categories for each child category and add resulting nested dict to children array
+        # Recursively call get_category_tree for each child category and add resulting nested dict to children array
         for child_category in child_categories:
-            result['children'].append(self.read_categories(name=child_category[1]))
+            result['children'].append(self.get_category_tree(name=child_category[1]))
 
         # Select child accounts
         cursor.execute(accounts_query, (category[0],))
@@ -188,3 +188,23 @@ class SqliteDb:
 
         return result
 
+    def get_category_fields_by_name(self, category_name):
+        """
+        Returns a dictionary of category fields for a given category name.
+        :param category_name: name of category
+        :return: dictionary of category fields
+        """
+        query = "SELECT name, value, parent_id, description FROM categories WHERE name=?"
+        cursor = self.connection.cursor()
+        cursor.execute(query, (category_name,))
+        row = cursor.fetchone()
+
+        if row is None:
+            return None
+
+        field_names = ["name", "value", "parent_id", "description"]
+        category_fields = {}
+        for i, field in enumerate(field_names):
+            category_fields[field] = row[i]
+
+        return category_fields

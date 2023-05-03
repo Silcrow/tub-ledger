@@ -54,6 +54,9 @@ class Category:
     def to_csv_row(self):
         return [self.name, self.value, self.parent.name, self.description]
 
+    # TODO create a method that takes dict and instantiates itself as obj from data in db
+    # which requires that I create a function to get category fields by name as dict
+
 
 class Account:
     """
@@ -68,6 +71,8 @@ class Account:
 
     def to_csv_row(self):
         return [self.name, self.value, self.category.name, self.remarks]
+
+    # TODO create a method that takes dict and instantiates itself as obj from data in db
 
 
 def print_composite(data, indent=0):
@@ -91,8 +96,8 @@ def print_balance_sheet(assets=None, liabilities=None, sqlite_db=None):
         raise ValueError("Either 'sqlite_db' or both 'assets' and 'liabilities' must be provided")
 
     if sqlite_db:
-        assets_dict = sqlite_db.read_categories(name='Assets')
-        liabilities_dict = sqlite_db.read_categories(name='Liabilities')
+        assets_dict = sqlite_db.get_category_tree(name='Assets')
+        liabilities_dict = sqlite_db.get_category_tree(name='Liabilities')
     else:
         # Use the assets and liabilities objects to create the balance sheet dict
         assets_dict = assets.to_dict()

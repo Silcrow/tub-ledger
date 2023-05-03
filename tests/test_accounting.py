@@ -103,5 +103,13 @@ class TestAccounting(unittest.TestCase):
         print_balance_sheet(sqlite_db=sqlite_db)
 
 
+class TestDatabase(unittest.TestCase):
+
+    def test_get_category_fields_by_name(self):
+        sqlite_db, assets, liabilities = initialize_SqliteDb()
+        category_fields = sqlite_db.get_category_fields_by_name('Assets')
+        print(category_fields)
+
+
 if __name__ == '__main__':
     unittest.main()
