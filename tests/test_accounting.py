@@ -1,4 +1,6 @@
+import logging
 import unittest
+from typing import Dict, Type
 from models.accounting import Category, Account, print_balance_sheet
 from database import SqliteDb
 
@@ -73,6 +75,12 @@ def insert_liabilities(sqlite_db, liabilities):
 
 class TestAccounting(unittest.TestCase):
 
+    def setUp(self) -> None:
+        print("\033[34mTesting:\033[0m", self._testMethodName)
+
+    def tearDown(self) -> None:
+        print(self._testMethodName, "\033[32mPassed.\033[0m")
+
     def test_create_ledger(self):
         """
         Integration test for the accounting system.
@@ -105,10 +113,31 @@ class TestAccounting(unittest.TestCase):
 
 class TestDatabase(unittest.TestCase):
 
+    def setUp(self) -> None:
+        self.db = SqliteDb('ledger.db')
+        print("\033[34mTesting:\033[0m", self._testMethodName)
+
+    def tearDown(self) -> None:
+        print(self._testMethodName, "\033[32mPassed.\033[0m")
+
+    def test_get_category_names(self):
+        category_names = self.db.get_category_names()
+        # print(category_names)
+        assert isinstance(category_names, list)
+        assert all(isinstance(name, str) for name in category_names)
+
     def test_get_category_fields_by_name(self):
-        sqlite_db, assets, liabilities = initialize_SqliteDb()
-        category_fields = sqlite_db.get_category_fields_by_name('Assets')
-        print(category_fields)
+        category_names = self.db.get_category_names()
+        for category_name in category_names:
+            category_fields = self.db.get_category_fields_by_name(category_name)
+            # print(category_fields)
+            assert isinstance(category_fields, dict)
+            assert isinstance(category_fields.get('name'), str)\
+                   and category_fields.get('name') is not None
+            assert isinstance(category_fields.get('value'), float)
+            assert category_fields.get('parent_id') is None or isinstance(category_fields.get('parent_id'), int)
+            assert isinstance(category_fields.get('description'), str)
+            print(f"{category_name} passed")
 
 
 if __name__ == '__main__':

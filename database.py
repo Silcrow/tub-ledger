@@ -208,3 +208,14 @@ class SqliteDb:
             category_fields[field] = row[i]
 
         return category_fields
+
+    def get_category_names(self):
+        """
+        Returns a list of unique category names.
+        :return: list of category names.
+        """
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT DISTINCT name FROM categories")
+        rows = cursor.fetchall()  # fetch all the results
+        category_names = [row[0] for row in rows]  # extract the first column of each row
+        return category_names
