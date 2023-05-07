@@ -19,8 +19,6 @@ class CategoryEnum(str, Enum):
 CategoryEnum = CategoryEnum.from_category_names()
 VALID_CATEGORIES = [category.value for category in CategoryEnum]
 
-# consider displaying the hierarchy of the categories to the user when they are selecting a category
-
 
 @app.command()
 def save_account(
@@ -28,19 +26,22 @@ def save_account(
         value: float = typer.Option(0.0, prompt="What's the account balance?"),
         category: CategoryEnum = typer.Option(None, prompt="Select a category:",
                                               show_choices=True,
-                                              case_sensitive=False,
-                                              help="Valid categories: food, rent, transportation"),
-        remarks: str = typer.Option("", prompt="What's the account description?")
+                                              case_sensitive=False),
+        remarks: str = typer.Option("", prompt="Any remarks?")
 ):
     kwargs = locals()
-    kwargs['category'] = category.value
-    print(kwargs)
 
-    account = Account(**kwargs)  # BUG the class expects category as obj not string
+    # convert CategoryEnum obj to Category obj
+    category_enum = kwargs['category']
+    category_obj = Category.from_enum(category_enum)
+    kwargs['category'] = category_obj
+
+    account_obj = Account.from_dict(kwargs)
+    print('acc_obj', account_obj)
+    print(account_obj.__dict__)
     # db.upsert_account(account)
-    print(account.to_dict())
 
-    print(f"Account {name} with balance {value:.2f} created.")
+    print(f"Saved {name} = {value:.2f} under {category}.")
     return kwargs
 
 

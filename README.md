@@ -12,5 +12,14 @@ if __name__ == "__main__":
     test_accounting.test_print_balance_sheet()
 ```
 
+## Run CLI
+```bash
+python cli.py save_account
+```
+
 ## To Self
 - make sure to add Assets and Liabilities category at any initial run, so that adding an account and not finding categories is impossible.
+
+## Features Skipped
+- `save_account` takes choice via typed input, but I want arrow keys and enter like click.
+Consider displaying the hierarchy of the categories to the user when they are selecting a category.

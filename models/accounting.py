@@ -1,5 +1,3 @@
-from database import SqliteDb
-
 
 class Category:
     """
@@ -51,11 +49,16 @@ class Category:
                 result['children'].append({'name': child.name, 'value': child.value})
         return result
 
-    def to_csv_row(self):
-        return [self.name, self.value, self.parent.name, self.description]
+    @classmethod
+    def from_enum(cls, category_enum):
+        return cls(
+            name=category_enum.value,
+            value=0,
+            parent=None,
+            description=''
+        )
 
-    # TODO create a method that takes dict and instantiates itself as obj from data in db
-    # which requires that I create a function to get category fields by name as dict
+    # TODO create a method that takes dict and instantiates itself as obj
 
 
 class Account:
