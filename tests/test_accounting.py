@@ -122,22 +122,22 @@ class TestDatabase(unittest.TestCase):
 
     def test_get_category_names(self):
         category_names = self.db.get_category_names()
-        # print(category_names)
+        print(category_names)
         assert isinstance(category_names, list)
         assert all(isinstance(name, str) for name in category_names)
 
-    def test_get_category_fields_by_name(self):
-        category_names = self.db.get_category_names()
-        for category_name in category_names:
-            category_fields = self.db.get_category_fields_by_name(category_name)
-            # print(category_fields)
-            assert isinstance(category_fields, dict)
-            assert isinstance(category_fields.get('name'), str)\
-                   and category_fields.get('name') is not None
-            assert isinstance(category_fields.get('value'), float)
-            assert category_fields.get('parent_id') is None or isinstance(category_fields.get('parent_id'), int)
-            assert isinstance(category_fields.get('description'), str)
-            print(f"{category_name} passed")
+    # def test_get_category_fields_by_name(self):
+    #     category_names = self.db.get_category_names()
+    #     for category_name in category_names:
+    #         category_fields = self.db.get_category_fields_by_name(category_name)
+    #         # print(category_fields)
+    #         assert isinstance(category_fields, dict)
+    #         assert isinstance(category_fields.get('name'), str)\
+    #                and category_fields.get('name') is not None
+    #         assert isinstance(category_fields.get('value'), float)
+    #         assert category_fields.get('parent_id') is None or isinstance(category_fields.get('parent_id'), int)
+    #         assert isinstance(category_fields.get('description'), str)
+    #         print(f"{category_name} passed")
 
 
 if __name__ == '__main__':

@@ -43,6 +43,7 @@ class SqliteDb:
     def calculate_category_value(self, category_id):
         """
         Calculate category value based on values of all its child categories and accounts.
+        NOTE: This was created so to create calculate_every_category().
         :param category_id: id of category
         :return: updated database
         """
@@ -188,26 +189,27 @@ class SqliteDb:
 
         return result
 
-    def get_category_fields_by_name(self, category_name):
-        """
-        Returns a dictionary of category fields for a given category name.
-        :param category_name: name of category
-        :return: dictionary of category fields
-        """
-        query = "SELECT name, value, parent_id, description FROM categories WHERE name=?"
-        cursor = self.connection.cursor()
-        cursor.execute(query, (category_name,))
-        row = cursor.fetchone()
-
-        if row is None:
-            return None
-
-        field_names = ["name", "value", "parent_id", "description"]
-        category_fields = {}
-        for i, field in enumerate(field_names):
-            category_fields[field] = row[i]
-
-        return category_fields
+    # NOTE: I realized I don't need this, but I'm not sure.
+    # def get_category_fields_by_name(self, category_name):
+    #     """
+    #     Returns a dictionary of category fields for a given category name.
+    #     :param category_name: name of category
+    #     :return: dictionary of category fields
+    #     """
+    #     query = "SELECT name, value, parent_id, description FROM categories WHERE name=?"
+    #     cursor = self.connection.cursor()
+    #     cursor.execute(query, (category_name,))
+    #     row = cursor.fetchone()
+    #
+    #     if row is None:
+    #         return None
+    #
+    #     field_names = ["name", "value", "parent_id", "description"]
+    #     category_fields = {}
+    #     for i, field in enumerate(field_names):
+    #         category_fields[field] = row[i]
+    #
+    #     return category_fields
 
     def get_category_names(self):
         """
