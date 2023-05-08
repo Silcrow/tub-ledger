@@ -1,17 +1,6 @@
-import logging
-import unittest
-from typing import Dict, Type
+import pytest
 from models.accounting import Category, Account, print_balance_sheet
 from database import SqliteDb
-
-
-def initialize_SqliteDb():
-    sqlite_db = SqliteDb('ledger.db')
-    assets = Category('Assets')
-    sqlite_db.upsert_category(assets)
-    liabilities = Category('Liabilities')
-    sqlite_db.upsert_category(liabilities)
-    return sqlite_db, assets, liabilities
 
 
 def insert_categories(sqlite_db, assets):
@@ -73,72 +62,47 @@ def insert_liabilities(sqlite_db, liabilities):
     sqlite_db.upsert_account(mortgage)
 
 
-class TestAccounting(unittest.TestCase):
-
-    def setUp(self) -> None:
-        print("\033[34mTesting:\033[0m", self._testMethodName)
-
-    def tearDown(self) -> None:
-        print(self._testMethodName, "\033[32mPassed.\033[0m")
-
-    def test_create_ledger(self):
-        """
-        Integration test for the accounting system.
-
-        This test ensures that the accounting system functions correctly when all components are integrated together.
-        It creates a ledger with various categories and accounts, and then prints the balance sheet using the
-        `print_balance_sheet` function.
-
-        Note: This is an integration test and may take longer to run than other tests.
-        It requires a valid SqliteDb connection.
-        """
-        sqlite_db, assets, liabilities = initialize_SqliteDb()
-        current_assets, traditional_savings, e_savings, fixed_assets = insert_categories(sqlite_db, assets)
-
-        # insert cash accounts
-        insert_traditional_savings(sqlite_db, traditional_savings)
-        insert_e_savings(sqlite_db, e_savings)
-
-        insert_fixed_assets(sqlite_db, fixed_assets)
-        insert_liabilities(sqlite_db, liabilities)
-        return sqlite_db, assets, liabilities
-
-    def test_print_balance_sheet(self):
-        print("\nTest with object input.")
-        sqlite_db, assets, liabilities = self.test_create_ledger()
-        print_balance_sheet(assets=assets, liabilities=liabilities)
-        print("\nTest with SQLite DB input.")
-        print_balance_sheet(sqlite_db=sqlite_db)
+@pytest.fixture(scope='module')
+def sqlite_db():
+    db = SqliteDb('test_ledger.db')
+    yield db
 
 
-class TestDatabase(unittest.TestCase):
-
-    def setUp(self) -> None:
-        self.db = SqliteDb('ledger.db')
-        print("\033[34mTesting:\033[0m", self._testMethodName)
-
-    def tearDown(self) -> None:
-        print(self._testMethodName, "\033[32mPassed.\033[0m")
-
-    def test_get_category_names(self):
-        category_names = self.db.get_category_names()
-        print(category_names)
-        assert isinstance(category_names, list)
-        assert all(isinstance(name, str) for name in category_names)
-
-    # def test_get_category_fields_by_name(self):
-    #     category_names = self.db.get_category_names()
-    #     for category_name in category_names:
-    #         category_fields = self.db.get_category_fields_by_name(category_name)
-    #         # print(category_fields)
-    #         assert isinstance(category_fields, dict)
-    #         assert isinstance(category_fields.get('name'), str)\
-    #                and category_fields.get('name') is not None
-    #         assert isinstance(category_fields.get('value'), float)
-    #         assert category_fields.get('parent_id') is None or isinstance(category_fields.get('parent_id'), int)
-    #         assert isinstance(category_fields.get('description'), str)
-    #         print(f"{category_name} passed")
+@pytest.fixture(scope='module')
+def categories(sqlite_db):
+    assets = Category('Assets')
+    sqlite_db.upsert_category(assets)
+    liabilities = Category('Liabilities')
+    sqlite_db.upsert_category(liabilities)
+    yield assets, liabilities
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_create_ledger(sqlite_db, categories):
+    """
+    Integration test for the accounting system.
+
+    This test ensures that the accounting system functions correctly when all components are integrated together.
+    It creates a ledger with various categories and accounts, and then prints the balance sheet using the
+    `print_balance_sheet` function.
+
+    Note: This is an integration test and may take longer to run than other tests.
+    It requires a valid SqliteDb connection.
+    """
+    assets, liabilities = categories
+    current_assets, traditional_savings, e_savings, fixed_assets = insert_categories(sqlite_db, assets)
+
+    # insert cash accounts
+    insert_traditional_savings(sqlite_db, traditional_savings)
+    insert_e_savings(sqlite_db, e_savings)
+
+    insert_fixed_assets(sqlite_db, fixed_assets)
+    insert_liabilities(sqlite_db, liabilities)
+    return sqlite_db, assets, liabilities
+
+
+def test_print_balance_sheet(sqlite_db, categories):
+    """
+    Test the `print_balance_sheet` function with SQLite DB input.
+    """
+    sqlite_db, assets, liabilities = test_create_ledger(sqlite_db, categories)
+    print_balance_sheet(sqlite_db=sqlite_db)

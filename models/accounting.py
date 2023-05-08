@@ -11,11 +11,6 @@ class Category:
         self.parent = parent
         self.children = []
         self.description = description
-        if parent is not None:
-            parent.add_child(self)
-
-    def add_child(self, child):
-        self.children.append(child)
 
     def calculate_value(self):
         """
@@ -58,24 +53,24 @@ class Category:
             description=''
         )
 
-    # TODO create a method that takes dict and instantiates itself as obj
+    @classmethod
+    def from_dict(cls, data):
+        return cls(**data)
 
 
 class Account:
     """
-    Represents individual listings in a models statement, such as cash in a bank or the value of a property.
+    Represents individual listings in a models' statement, such as cash in a bank or the value of a property.
     """
     def __init__(self, name, value, category, remarks=None):
         self.name = name
         self.value = value
         self.category = category
         self.remarks = remarks
-        category.add_child(self)
 
-    def to_csv_row(self):
-        return [self.name, self.value, self.category.name, self.remarks]
-
-    # TODO create a method that takes dict and instantiates itself as obj from data in db
+    @classmethod
+    def from_dict(cls, data):
+        return cls(**data)
 
 
 def print_composite(data, indent=0):
