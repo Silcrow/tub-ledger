@@ -89,17 +89,9 @@ def print_composite(data, indent=0):
             print_composite(child, indent+1)
 
 
-def print_balance_sheet(assets=None, liabilities=None, sqlite_db=None):
-    if not sqlite_db and (not assets or not liabilities):
-        raise ValueError("Either 'sqlite_db' or both 'assets' and 'liabilities' must be provided")
-
-    if sqlite_db:
-        assets_dict = sqlite_db.get_category_tree(name='Assets')
-        liabilities_dict = sqlite_db.get_category_tree(name='Liabilities')
-    else:
-        # Use the assets and liabilities objects to create the balance sheet dict
-        assets_dict = assets.to_dict()
-        liabilities_dict = liabilities.to_dict()
+def print_balance_sheet(db=None):
+    assets_dict = db.get_category_tree(name='Assets')
+    liabilities_dict = db.get_category_tree(name='Liabilities')
 
     balance_sheet_dict = {
         'assets': assets_dict,
