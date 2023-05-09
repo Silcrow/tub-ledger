@@ -4,7 +4,7 @@ from database import SqliteDb
 
 @pytest.fixture(scope="module")
 def db():
-    db = SqliteDb('ledger.db')
+    db = SqliteDb(filename='test_ledger.db')
     yield db
 
 

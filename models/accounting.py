@@ -108,7 +108,7 @@ def print_balance_sheet(assets=None, liabilities=None, sqlite_db=None):
     }
 
     # Print the balance sheet from the balance_sheet_dict
-    print('Balance Sheet (as of March 4, 2023)')  # will need to timestamp and save each balance sheet.
+    print('\nBalance Sheet (as of March 4, 2023)')  # will need to timestamp and save each balance sheet.
     print_composite(balance_sheet_dict['assets'])
     print_composite(balance_sheet_dict['liabilities'])
     print('Net Worth:', "{:,.2f}".format(balance_sheet_dict['net_worth']))
