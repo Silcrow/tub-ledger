@@ -13,8 +13,9 @@ if __name__ == "__main__":
 ```
 
 ## Run CLI
+At root directory:
 ```bash
-python cli_layer.py save_account
+python -m cli_layer.cli --help
 ```
 
 ## To Self

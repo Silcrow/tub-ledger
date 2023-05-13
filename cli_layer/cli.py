@@ -8,6 +8,30 @@ app = typer.Typer()
 
 
 @app.command()
+def save_category(
+        use_test_db: bool = False,
+        name: str = typer.Option(..., prompt="What's the category name?"),
+        parent: CategoryChoice = typer.Option(default=None, prompt="Select a parent category:",
+                                              show_choices=True,
+                                              case_sensitive=False),
+        description: str = typer.Option("", prompt="Description?")
+):
+    kwargs = locals()
+    del kwargs['use_test_db']
+    # convert CategoryChoice obj to Category obj
+    category_choice = kwargs['parent']
+    category = Category.from_enum(category_choice)
+    kwargs['parent'] = category
+
+    category = Category.from_dict(kwargs)
+    db = SqliteDb('ledger.db', test=use_test_db)
+    db.upsert_category(category)
+    print(f"Saved {category.name} under {category.parent.name}.")
+    db.close()
+    return kwargs
+
+
+@app.command()
 def save_account(
         use_test_db: bool = False,
         name: str = typer.Option(..., prompt="What's the account name?"),
@@ -35,5 +59,12 @@ def save_account(
     return kwargs
 
 
+# @app.default_command()
+# def default():
+#     typer.echo("Welcome to the app lobby!")
+
+
 if __name__ == "__main__":
-    app()
+    # TODO there needs to be a Typer way to enter a "lobby room" menu then select which function to run from there.
+    # app()
+    typer.run(save_category)
