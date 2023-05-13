@@ -1,21 +1,24 @@
 import pytest
-from database import SqliteDb
+from db_layer.database import SqliteDb
 from models.accounting import Account, Category
 
 
 @pytest.fixture(scope="module")
 def db():
-    db = SqliteDb(filename='test_ledger.db')
-    yield db
+    db = SqliteDb('ledger.db', test=True)
+    return db
+    db.close()
 
 
+@pytest.mark.depends(on=['test_create_ledger'])
 def test_get_category_names(db):
     category_names = db.get_category_names()
-    # print('\n', category_names)
+    print('\n', category_names, '\nfrom db:', db.filename)
     assert isinstance(category_names, list)
     assert all(isinstance(name, str) for name in category_names)
 
 
+@pytest.mark.depends(on=['test_create_ledger', 'test_get_category_names'])
 def test_upsert_account(db):
     test_account = Account(name='Test Account', value=100.0, category=Category(name='Assets'), remarks='Test Remarks')
     category_names = db.get_category_names()
@@ -45,6 +48,10 @@ def test_upsert_account(db):
         db.cursor.execute(category_query, (category_name,))
         category_id = db.cursor.fetchone()[0]
         assert account_row[3] == category_id
+
+        # Delete the test account
+        db.cursor.execute("DELETE FROM accounts WHERE name = ?", (test_account.name,))
+        db.connection.commit()
 
 # def test_get_category_fields_by_name(db):
 #     category_names = db.get_category_names()

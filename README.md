@@ -14,12 +14,13 @@ if __name__ == "__main__":
 
 ## Run CLI
 ```bash
-python cli.py save_account
+python cli_layer.py save_account
 ```
 
 ## To Self
 - make sure to add Assets and Liabilities category at any initial run, so that adding an account and not finding categories is impossible.
-
+- creating Enum class or declaring sqlite db in cli.py, then importing it to test files will cause a glitch where it produces
+such files in the test dir.
 ## Features Skipped
 - `save_account` takes choice via typed input, but I want arrow keys and enter like click.
 Consider displaying the hierarchy of the categories to the user when they are selecting a category.

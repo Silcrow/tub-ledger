@@ -7,11 +7,15 @@ class SqliteDb:
     Handles reading and writing to a SQLite database file.
     """
 
-    def __init__(self, filename, directory='database'):
-        self.directory = directory
-        os.makedirs(self.directory, exist_ok=True)
-        self.filename = os.path.join(self.directory, filename)
-        self.connection = sqlite3.connect(self.filename)
+    def __init__(self, filename=None, test=False):
+        directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
+        self.filename = filename
+        if test:
+            directory = 'database'
+            self.filename = f"test_{filename}"
+        os.makedirs(directory, exist_ok=True)
+        db_path = os.path.join(directory, self.filename)
+        self.connection = sqlite3.connect(db_path)
         self.cursor = self.connection.cursor()
 
         # create categories table if it doesn't exist
@@ -39,6 +43,11 @@ class SqliteDb:
         """)
 
         self.connection.commit()
+
+    # did not grok
+    def close(self):
+        self.cursor.close()
+        self.connection.close()
 
     def calculate_category_value(self, category_id):
         """

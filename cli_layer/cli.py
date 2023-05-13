@@ -1,44 +1,37 @@
 import typer
+
+from cli_layer.enums import CategoryChoice
 from models.accounting import Category, Account
-from database import SqliteDb
-from enum import Enum
+from db_layer.database import SqliteDb
 
 app = typer.Typer()
-real_db = SqliteDb('ledger.db')
-
-category_names = real_db.get_category_names()
-
-
-class CategoryEnum(str, Enum):
-    @classmethod
-    def from_category_list(cls, list_data):
-        enum_values = [(name.upper(), name) for name in list_data]  # enum class attributes
-        return cls("CategoryEnum", enum_values)
-
-
-CategoryChoice = CategoryEnum.from_category_list(category_names)
 
 
 @app.command()
 def save_account(
+        use_test_db: bool = False,
         name: str = typer.Option(..., prompt="What's the account name?"),
         value: float = typer.Option(0.0, prompt="What's the account balance?"),
-        category: CategoryChoice = typer.Option(None, prompt="Select a category:",
+        category: CategoryChoice = typer.Option(default=None, prompt="Select a category:",
                                                 show_choices=True,
                                                 case_sensitive=False),
         remarks: str = typer.Option("", prompt="Any remarks?")
 ):
-    kwargs = locals()
+    if category is None:
+        category = CategoryChoice.Assets  # Set default value
 
+    kwargs = locals()
+    del kwargs['use_test_db']
     # convert CategoryChoice obj to Category obj
     category_choice = kwargs['category']
     category = Category.from_enum(category_choice)
     kwargs['category'] = category
 
     account = Account.from_dict(kwargs)
-    real_db.upsert_account(account)
-
+    db = SqliteDb('ledger.db', test=use_test_db)
+    db.upsert_account(account)
     print(f"Saved {account.name}: {account.value:.2f} under {account.category.name}.")
+    db.close()
     return kwargs
 
 

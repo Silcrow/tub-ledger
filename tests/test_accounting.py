@@ -1,6 +1,6 @@
 import pytest
 from models.accounting import Category, Account, print_balance_sheet
-from database import SqliteDb
+from db_layer.database import SqliteDb
 
 
 def insert_categories(db, assets):
@@ -64,20 +64,21 @@ def insert_liabilities(db, liabilities):
 
 @pytest.fixture(scope='module')
 def db():
-    db = SqliteDb(filename='test_ledger.db')
-    yield db
+    db = SqliteDb('ledger.db', test=True)
+    return db
+    db.close()
 
 
-@pytest.fixture(scope='module')
-def categories(db):
+def create_default_categories(db):
     assets = Category('Assets')
     db.upsert_category(assets)
     liabilities = Category('Liabilities')
     db.upsert_category(liabilities)
-    yield assets, liabilities
+    return assets, liabilities
 
 
-def test_create_ledger(db, categories):
+@pytest.mark.dependency(name='test_create_ledger')
+def test_create_ledger(db):
     """
     Integration test for the accounting system.
 
@@ -88,7 +89,7 @@ def test_create_ledger(db, categories):
     Note: This is an integration test and may take longer to run than other tests.
     It requires a valid SqliteDb connection.
     """
-    assets, liabilities = categories
+    assets, liabilities = create_default_categories(db)
     current_assets, traditional_savings, e_savings, fixed_assets = insert_categories(db, assets)
 
     # insert cash accounts
@@ -100,6 +101,7 @@ def test_create_ledger(db, categories):
     return db, assets, liabilities
 
 
+@pytest.mark.depends(on=['test_create_ledger'])
 def test_print_balance_sheet(db):
     """
     Test the `print_balance_sheet` function with SQLite DB input.
