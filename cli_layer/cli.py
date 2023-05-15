@@ -5,6 +5,8 @@ from models.accounting import Category, Account
 from db_layer.database import SqliteDb
 
 app = typer.Typer()
+BLUE = "\033[94m"
+RESET = "\033[0m"
 
 
 @app.command()
@@ -59,12 +61,31 @@ def save_account(
     return kwargs
 
 
-# @app.default_command()
-# def default():
-#     typer.echo("Welcome to the app lobby!")
+@app.command()
+def run_menu():
+    """
+    List all commands the user can select.
+    :return: string of selected choice.
+    """
+    # TODO Make "return to menu" at any moment running any function.
+    print(BLUE + "Main menu" + RESET)
+    commands_dict = {command.callback.__name__: command.callback for command in app.registered_commands}
+    choices = list(commands_dict.keys())
+    choices.remove('run_menu')
+    numbered_choices = "\n".join(f"{index + 1}. {choice}" for index, choice in enumerate(choices))
+    choice = typer.prompt(f"Enter number to select:\n{numbered_choices}\t")
+    print(choice)
+    try:
+        index = int(choice) - 1
+        selected_choice = choices[index]
+        typer.echo(f"Selected {selected_choice}. Ctrl+C to go to main menu.")
+        command_func = commands_dict[selected_choice]
+        typer.run(command_func)
+    except (ValueError, IndexError, KeyError):
+        typer.echo("Invalid choice. Please try again.")
+        run_menu()
+    return selected_choice
 
 
 if __name__ == "__main__":
-    # TODO there needs to be a Typer way to enter a "lobby room" menu then select which function to run from there.
-    # app()
-    typer.run(save_category)
+    typer.run(run_menu)
