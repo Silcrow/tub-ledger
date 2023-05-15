@@ -1,15 +1,17 @@
 # tub-ledger
 A ledger system for myself. Run `main.py` to start.
 
-## To use SQLite DB
-run `test_accounting.py` or
+## To populate DB with starter data
+run `test_accounting.py` or `main.py`
 ```python
 # main.py
-from tests.test_accounting import TestAccounting
+from tests.test_accounting import test_print_balance_sheet, test_create_ledger
+from db_layer.database import SqliteDb
 
 if __name__ == "__main__":
-    test_accounting = TestAccounting()
-    test_accounting.test_print_balance_sheet()
+    db = SqliteDb('ledger.db')
+    test_create_ledger(db)
+    test_print_balance_sheet(db)
 ```
 
 ## Run CLI

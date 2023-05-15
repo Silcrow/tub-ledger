@@ -5,8 +5,20 @@ from models.accounting import Category, Account
 from db_layer.database import SqliteDb
 
 app = typer.Typer()
+
 BLUE = "\033[94m"
 RESET = "\033[0m"
+
+
+def confirm_save() -> bool:
+    while True:
+        response = input("Do you want to save? (y/n): ").lower()
+        if response in ('y', 'yes'):
+            return True
+        elif response in ('n', 'no'):
+            return False
+        else:
+            print("Invalid response. Please enter 'y' or 'n'.")
 
 
 @app.command()
@@ -26,10 +38,14 @@ def save_category(
     kwargs['parent'] = category
 
     category = Category.from_dict(kwargs)
-    db = SqliteDb('ledger.db', test=use_test_db)
-    db.upsert_category(category)
-    print(f"Saved {category.name} under {category.parent.name}.")
-    db.close()
+    if confirm_save():
+        db = SqliteDb('ledger.db', test=use_test_db)
+        db.upsert_category(category)
+        print(f"Saved {category.name} under {category.parent.name}.")
+        db.close()
+        typer.run(start_menu)
+    else:
+        typer.run(start_menu)
     return kwargs
 
 
@@ -54,38 +70,45 @@ def save_account(
     kwargs['category'] = category
 
     account = Account.from_dict(kwargs)
-    db = SqliteDb('ledger.db', test=use_test_db)
-    db.upsert_account(account)
-    print(f"Saved {account.name}: {account.value:.2f} under {account.category.name}.")
-    db.close()
+    if confirm_save():
+        db = SqliteDb('ledger.db', test=use_test_db)
+        db.upsert_account(account)
+        print(f"Saved {account.name}: {account.value:.2f} under {account.category.name}.")
+        db.close()
+        typer.run(start_menu)
+    else:
+        typer.run(start_menu)
     return kwargs
 
 
 @app.command()
-def run_menu():
+def exit_menu():
+    raise typer.Exit
+
+
+@app.command()
+def start_menu():
     """
     List all commands the user can select.
     :return: string of selected choice.
     """
-    # TODO Make "return to menu" at any moment running any function.
     print(BLUE + "Main menu" + RESET)
     commands_dict = {command.callback.__name__: command.callback for command in app.registered_commands}
     choices = list(commands_dict.keys())
-    choices.remove('run_menu')
+    choices.remove('start_menu')
     numbered_choices = "\n".join(f"{index + 1}. {choice}" for index, choice in enumerate(choices))
     choice = typer.prompt(f"Enter number to select:\n{numbered_choices}\t")
-    print(choice)
     try:
         index = int(choice) - 1
         selected_choice = choices[index]
-        typer.echo(f"Selected {selected_choice}. Ctrl+C to go to main menu.")
+        typer.echo(f"{selected_choice} selected.")
         command_func = commands_dict[selected_choice]
         typer.run(command_func)
     except (ValueError, IndexError, KeyError):
         typer.echo("Invalid choice. Please try again.")
-        run_menu()
+        start_menu()
     return selected_choice
 
 
 if __name__ == "__main__":
-    typer.run(run_menu)
+    typer.run(start_menu)
