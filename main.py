@@ -6,7 +6,6 @@ if __name__ == "__main__":
     test_create_ledger(db)
     test_print_balance_sheet(db)
 
-    # TODO Make cli menu
     # TODO Make disable_account
     # TODO Make disable_category
     # provide "disable" bool to both category and account records. Edit all queries or db-read opr accordingly.

@@ -53,6 +53,17 @@ def test_upsert_account(db):
         db.cursor.execute("DELETE FROM accounts WHERE name = ?", (test_account.name,))
         db.connection.commit()
 
+
+@pytest.mark.depends(on=['test_create_ledger'])
+def test_enabled_accounts_view(db):
+    test_account = Account(name='Test Account', value=0, category=Category(name='Assets'), is_disabled=1)
+    db.upsert_account(test_account)
+    account_row = db.get_account_by_name('Test Account')
+    assert account_row['is_disabled'] == 1
+    # Delete the test account
+    db.cursor.execute("DELETE FROM accounts WHERE name = ?", (test_account.name,))
+    db.connection.commit()
+
 # def test_get_category_fields_by_name(db):
 #     category_names = db.get_category_names()
 #     for category_name in category_names:

@@ -38,9 +38,16 @@ class SqliteDb:
                 value REAL NOT NULL,
                 category_id INTEGER NOT NULL,
                 remarks TEXT,
+                is_disabled INTEGER DEFAULT 0,
                 FOREIGN KEY(category_id) REFERENCES categories(id)
             )
         """)
+
+        # create enabled_accounts view
+        self.cursor.execute("""
+                    CREATE VIEW IF NOT EXISTS enabled_accounts AS
+                    SELECT * FROM accounts WHERE is_disabled = 0
+                """)
 
         self.connection.commit()
 
@@ -142,14 +149,15 @@ class SqliteDb:
 
         # Insert or update account record
         query = """
-            INSERT INTO accounts (name, value, category_id, remarks)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO accounts (name, value, category_id, remarks, is_disabled)
+            VALUES (?, ?, ?, ?, ?)
             ON CONFLICT (name) DO UPDATE SET
                 value = excluded.value,
                 category_id = excluded.category_id,
                 remarks = excluded.remarks
         """
-        values = (account.name, account.value, category_id, account.remarks)
+        values = (account.name, account.value, category_id, account.remarks, account.is_disabled)
+        print('\nvalues', values)
         self.cursor.execute(query, values)
         self.connection.commit()
         self.calculate_every_category()
@@ -230,3 +238,19 @@ class SqliteDb:
         rows = cursor.fetchall()  # fetch all the results
         category_names = [row[0] for row in rows]  # extract the first column of each row
         return category_names
+
+    def get_account_by_name(self, name):
+        """
+        Returns account row given name parameter.
+        :param name: str
+        :return: dict
+        """
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM accounts WHERE name=?", (name,))
+        row = cursor.fetchone()
+        if row is not None:
+            columns = [desc[0] for desc in cursor.description]
+            account_dict = dict(zip(columns, row))
+            return account_dict
+        else:
+            return None

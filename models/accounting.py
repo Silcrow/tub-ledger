@@ -62,11 +62,12 @@ class Account:
     """
     Represents individual listings in a models' statement, such as cash in a bank or the value of a property.
     """
-    def __init__(self, name, value, category, remarks=None):
+    def __init__(self, name, value, category, remarks='', is_disabled=0):
         self.name = name
         self.value = value
         self.category = category
         self.remarks = remarks
+        self.is_disabled = is_disabled
 
     @classmethod
     def from_dict(cls, data):
