@@ -1,5 +1,7 @@
 import pytest
-from cli_layer.cli import save_account, save_category
+import typer
+
+from cli_layer.cli import save_account, save_category, exit_menu
 from db_layer.database import SqliteDb
 from models.accounting import Category
 from cli_layer.enums import CategoryEnum
@@ -56,3 +58,7 @@ def test_save_account(db):
         # Clean up test db
         delete_account_by_name(db, 'test account')
 
+
+def test_exit_menu():
+    with pytest.raises(typer.Exit):
+        exit_menu()
