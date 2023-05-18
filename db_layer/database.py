@@ -43,7 +43,7 @@ class SqliteDb:
             )
         """)
 
-        # create enabled_accounts view
+        # create enabled_accounts view if it doesn't exist
         self.cursor.execute("""
                     CREATE VIEW IF NOT EXISTS enabled_accounts AS
                     SELECT * FROM accounts WHERE is_disabled = 0
@@ -58,7 +58,7 @@ class SqliteDb:
 
     def calculate_category_value(self, category_id):
         """
-        Calculate category value based on values of all its child categories and accounts.
+        Calculate category value based on values of all its child categories and enabled accounts.
         NOTE: This was created so to create calculate_every_category().
         :param category_id: id of category
         :return: updated database
@@ -69,7 +69,7 @@ class SqliteDb:
         category_value = cursor.fetchone()[0]
 
         # sum values from all child accounts and categories
-        cursor.execute("SELECT value FROM accounts WHERE category_id=?", (category_id,))
+        cursor.execute("SELECT value FROM enabled_accounts WHERE category_id=?", (category_id,))
         child_account_values = [row[0] for row in cursor.fetchall()]
         total_value = category_value + sum(child_account_values)
         cursor.execute("SELECT value FROM categories WHERE parent_id=? AND parent_id IS NOT NULL", (category_id,))
@@ -165,13 +165,13 @@ class SqliteDb:
     # did not grok
     def get_category_tree(self, name=None):
         """
-        Returns a nested dict from categories and accounts databases.
+        Returns a nested dict from categories and enabled accounts databases.
         :param name: name of category i.e. Assets, Liabilities, etc.
         :return: nested dict
         """
         self.calculate_every_category()
         categories_query = "SELECT id, name, value FROM categories WHERE name=?"
-        accounts_query = "SELECT id, name, value, remarks FROM accounts WHERE category_id=?"
+        accounts_query = "SELECT id, name, value, remarks FROM enabled_accounts WHERE category_id=?"
         cursor = self.connection.cursor()
 
         result = {'name': None, 'value': 0.0, 'children': []}
