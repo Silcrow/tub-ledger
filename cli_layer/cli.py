@@ -10,17 +10,6 @@ BLUE = "\033[94m"
 RESET = "\033[0m"
 
 
-def confirm_save() -> bool:
-    while True:
-        response = input("Do you want to save? (y/n): ").lower()
-        if response in ('y', 'yes'):
-            return True
-        elif response in ('n', 'no'):
-            return False
-        else:
-            print("Invalid response. Please enter 'y' or 'n'.")
-
-
 @app.command()
 def save_category(
         use_test_db: bool = False,
@@ -38,14 +27,20 @@ def save_category(
     kwargs['parent'] = category
 
     category = Category.from_dict(kwargs)
-    if confirm_save():
+    if use_test_db:
         db = SqliteDb('ledger.db', test=use_test_db)
         db.upsert_category(category)
         print(f"Saved {category.name} under {category.parent.name}.")
         db.close()
-        typer.run(start_menu)
     else:
-        typer.run(start_menu)
+        if typer.confirm("Do you want to save?", default=True):
+            db = SqliteDb('ledger.db', test=use_test_db)
+            db.upsert_category(category)
+            print(f"Saved {category.name} under {category.parent.name}.")
+            db.close()
+            typer.run(start_menu)
+        else:
+            typer.run(start_menu)
     return kwargs
 
 
@@ -70,14 +65,20 @@ def save_account(
     kwargs['category'] = category
 
     account = Account.from_dict(kwargs)
-    if confirm_save():
+    if use_test_db:
         db = SqliteDb('ledger.db', test=use_test_db)
         db.upsert_account(account)
         print(f"Saved {account.name}: {account.value:.2f} under {account.category.name}.")
         db.close()
-        typer.run(start_menu)
     else:
-        typer.run(start_menu)
+        if typer.confirm("Do you want to save?", default=True):
+            db = SqliteDb('ledger.db', test=use_test_db)
+            db.upsert_account(account)
+            print(f"Saved {account.name}: {account.value:.2f} under {account.category.name}.")
+            db.close()
+            typer.run(start_menu)
+        else:
+            typer.run(start_menu)
     return kwargs
 
 

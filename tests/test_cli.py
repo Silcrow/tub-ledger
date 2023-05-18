@@ -1,7 +1,7 @@
 import pytest
 import typer
 
-from cli_layer.cli import save_account, save_category, exit_menu
+from cli_layer.cli import save_account, save_category, exit_menu, start_menu
 from db_layer.database import SqliteDb
 from models.accounting import Category
 from cli_layer.enums import CategoryEnum
@@ -54,7 +54,7 @@ def test_save_account(db):
         # Validate data type
         assert isinstance(test_account['name'], str)
         assert isinstance(test_account['category'], Category)
-        assert isinstance(test_account['description'], str)
+        assert isinstance(test_account['remarks'], str)
         # Clean up test db
         delete_account_by_name(db, 'test account')
 
