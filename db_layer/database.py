@@ -157,7 +157,6 @@ class SqliteDb:
                 remarks = excluded.remarks
         """
         values = (account.name, account.value, category_id, account.remarks, account.is_disabled)
-        print('\nvalues', values)
         self.cursor.execute(query, values)
         self.connection.commit()
         self.calculate_every_category()
@@ -254,3 +253,20 @@ class SqliteDb:
             return account_dict
         else:
             return None
+
+    def get_accounts(self, enabled=True):
+        """
+        Returns either from enabled_accounts view or disabled accounts from the accounts table
+        :param enabled: toggle mode
+        :return: list of tuples
+        """
+        cursor = self.connection.cursor()
+
+        if enabled:
+            cursor.execute("SELECT * FROM enabled_accounts")
+        else:
+            cursor.execute("SELECT * FROM accounts WHERE is_disabled = 1")
+
+        rows = cursor.fetchall()
+        return rows
+

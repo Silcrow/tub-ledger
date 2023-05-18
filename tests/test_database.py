@@ -64,6 +64,20 @@ def test_enabled_accounts_view(db):
     db.cursor.execute("DELETE FROM accounts WHERE name = ?", (test_account.name,))
     db.connection.commit()
 
+
+def test_get_enabled_accounts(db):
+    enabled_accounts = db.get_accounts(enabled=True)
+    assert enabled_accounts is not None
+    assert isinstance(enabled_accounts, list)
+    assert all(isinstance(account, tuple) for account in enabled_accounts)
+
+
+def test_get_disabled_accounts(db):
+    disabled_accounts = db.get_accounts(enabled=False)
+    assert disabled_accounts is not None
+    assert isinstance(disabled_accounts, list)
+    assert all(isinstance(account, tuple) for account in disabled_accounts)
+
 # def test_get_category_fields_by_name(db):
 #     category_names = db.get_category_names()
 #     for category_name in category_names:
