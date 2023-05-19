@@ -45,9 +45,9 @@ class SqliteDb:
 
         # create enabled_accounts view if it doesn't exist
         self.cursor.execute("""
-                    CREATE VIEW IF NOT EXISTS enabled_accounts AS
-                    SELECT * FROM accounts WHERE is_disabled = 0
-                """)
+            CREATE VIEW IF NOT EXISTS enabled_accounts AS
+            SELECT * FROM accounts WHERE is_disabled = 0
+        """)
 
         self.connection.commit()
 
@@ -64,19 +64,18 @@ class SqliteDb:
         :return: updated database
         """
         # fetch current value
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT value FROM categories WHERE id=?", (category_id,))
-        category_value = cursor.fetchone()[0]
+        self.cursor.execute("SELECT value FROM categories WHERE id=?", (category_id,))
+        category_value = self.cursor.fetchone()[0]
 
         # sum values from all child accounts and categories
-        cursor.execute("SELECT value FROM enabled_accounts WHERE category_id=?", (category_id,))
-        child_account_values = [row[0] for row in cursor.fetchall()]
+        self.cursor.execute("SELECT value FROM enabled_accounts WHERE category_id=?", (category_id,))
+        child_account_values = [row[0] for row in self.cursor.fetchall()]
         total_value = category_value + sum(child_account_values)
-        cursor.execute("SELECT value FROM categories WHERE parent_id=? AND parent_id IS NOT NULL", (category_id,))
-        child_category_values = [row[0] for row in cursor.fetchall()]
+        self.cursor.execute("SELECT value FROM categories WHERE parent_id=? AND parent_id IS NOT NULL", (category_id,))
+        child_category_values = [row[0] for row in self.cursor.fetchall()]
         total_value += sum(child_category_values)
 
-        cursor.execute("UPDATE categories SET value=? WHERE id=?", (total_value, category_id))
+        self.cursor.execute("UPDATE categories SET value=? WHERE id=?", (total_value, category_id))
         self.connection.commit()
 
     def calculate_every_category(self):
@@ -101,6 +100,7 @@ class SqliteDb:
             SELECT id FROM category_tree ORDER BY depth DESC;
         """
         category_ids = [row[0] for row in self.cursor.execute(query)]
+        self.connection.commit()
         for category_id in category_ids:
             self.calculate_category_value(category_id)
 
@@ -161,6 +161,24 @@ class SqliteDb:
         self.connection.commit()
         self.calculate_every_category()
 
+    def disable_account(self, name):
+        query = "UPDATE accounts SET is_disabled = 1 WHERE name = ?"
+        self.cursor.execute(query, (name,))
+        self.cursor.execute("SELECT * FROM accounts WHERE name = ?", (name,))
+        disabled_account = self.cursor.fetchone()
+        self.connection.commit()
+        print(f'\nDisabled account: {disabled_account}')
+        return disabled_account
+
+    def enable_account(self, name):
+        query = "UPDATE accounts SET is_disabled = 0 WHERE name = ?"
+        self.cursor.execute(query, (name,))
+        self.cursor.execute("SELECT * FROM accounts WHERE name = ?", (name,))
+        enabled_account = self.cursor.fetchone()
+        self.connection.commit()
+        print(f'\nEnabled account: {enabled_account}')
+        return enabled_account
+
     # did not grok
     def get_category_tree(self, name=None):
         """
@@ -171,29 +189,29 @@ class SqliteDb:
         self.calculate_every_category()
         categories_query = "SELECT id, name, value FROM categories WHERE name=?"
         accounts_query = "SELECT id, name, value, remarks FROM enabled_accounts WHERE category_id=?"
-        cursor = self.connection.cursor()
 
         result = {'name': None, 'value': 0.0, 'children': []}
 
         # Select the category with the given name
-        cursor.execute(categories_query, (name,))
-        category = cursor.fetchone()
+        self.cursor.execute(categories_query, (name,))
+        category = self.cursor.fetchone()
         if category is None:
             raise ValueError("No category found with name {}".format(name))
         result['name'] = category[1]
         result['value'] = category[2]
 
         # Select child categories
-        cursor.execute("SELECT id, name, value FROM categories WHERE parent_id=?", (category[0],))
-        child_categories = cursor.fetchall()
+        self.cursor.execute("SELECT id, name, value FROM categories WHERE parent_id=?", (category[0],))
+        child_categories = self.cursor.fetchall()
 
         # Recursively call get_category_tree for each child category and add resulting nested dict to children array
         for child_category in child_categories:
             result['children'].append(self.get_category_tree(name=child_category[1]))
 
         # Select child accounts
-        cursor.execute(accounts_query, (category[0],))
-        child_accounts = cursor.fetchall()
+        self.cursor.execute(accounts_query, (category[0],))
+        child_accounts = self.cursor.fetchall()
+        self.connection.commit()
 
         # Add a nested dict to children array for each child account
         for child_account in child_accounts:
@@ -213,9 +231,8 @@ class SqliteDb:
     #     :return: dictionary of category fields
     #     """
     #     query = "SELECT name, value, parent_id, description FROM categories WHERE name=?"
-    #     cursor = self.connection.cursor()
-    #     cursor.execute(query, (category_name,))
-    #     row = cursor.fetchone()
+    #     self.cursor.execute(query, (category_name,))
+    #     row = self.cursor.fetchone()
     #
     #     if row is None:
     #         return None
@@ -232,9 +249,8 @@ class SqliteDb:
         Returns a list of unique category names.
         :return: list of category names.
         """
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT DISTINCT name FROM categories")
-        rows = cursor.fetchall()  # fetch all the results
+        self.cursor.execute("SELECT DISTINCT name FROM categories")
+        rows = self.cursor.fetchall()  # fetch all the results
         category_names = [row[0] for row in rows]  # extract the first column of each row
         return category_names
 
@@ -244,11 +260,10 @@ class SqliteDb:
         :param name: str
         :return: dict
         """
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM accounts WHERE name=?", (name,))
-        row = cursor.fetchone()
+        self.cursor.execute("SELECT * FROM accounts WHERE name=?", (name,))
+        row = self.cursor.fetchone()
         if row is not None:
-            columns = [desc[0] for desc in cursor.description]
+            columns = [desc[0] for desc in self.cursor.description]
             account_dict = dict(zip(columns, row))
             return account_dict
         else:
@@ -256,17 +271,16 @@ class SqliteDb:
 
     def get_accounts(self, enabled=True):
         """
-        Returns either from enabled_accounts view or disabled accounts from the accounts table
+        Returns the names of either from enabled_accounts view or disabled accounts from the accounts table
         :param enabled: toggle mode
         :return: list of tuples
         """
-        cursor = self.connection.cursor()
-
         if enabled:
-            cursor.execute("SELECT * FROM enabled_accounts")
+            self.cursor.execute("SELECT * FROM enabled_accounts")
         else:
-            cursor.execute("SELECT * FROM accounts WHERE is_disabled = 1")
+            self.cursor.execute("SELECT * FROM accounts WHERE is_disabled = 1")
 
-        rows = cursor.fetchall()
-        return rows
+        rows = self.cursor.fetchall()
+        account_names = [row[1] for row in rows]
+        return account_names
 

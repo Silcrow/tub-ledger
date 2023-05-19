@@ -1,6 +1,6 @@
 import typer
 
-from cli_layer.enums import CategoryChoice
+from cli_layer.enums import CategoryChoice, enabled_accounts, prompt_selected_choice, disabled_accounts
 from models.accounting import Category, Account
 from db_layer.database import SqliteDb
 
@@ -34,7 +34,7 @@ def save_category(
         db.close()
     else:
         if typer.confirm("Do you want to save?", default=True):
-            db = SqliteDb('ledger.db', test=use_test_db)
+            db = SqliteDb('ledger.db')
             db.upsert_category(category)
             print(f"Saved {category.name} under {category.parent.name}.")
             db.close()
@@ -42,6 +42,9 @@ def save_category(
         else:
             typer.run(start_menu)
     return kwargs
+
+
+# TODO Make disable_category
 
 
 @app.command()
@@ -72,7 +75,7 @@ def save_account(
         db.close()
     else:
         if typer.confirm("Do you want to save?", default=True):
-            db = SqliteDb('ledger.db', test=use_test_db)
+            db = SqliteDb('ledger.db')
             db.upsert_account(account)
             print(f"Saved {account.name}: {account.value:.2f} under {account.category.name}.")
             db.close()
@@ -80,6 +83,26 @@ def save_account(
         else:
             typer.run(start_menu)
     return kwargs
+
+
+@app.command()
+def disable_account(
+        use_test_db: bool = False,
+):
+    selected_choice = prompt_selected_choice(enabled_accounts)
+    db = SqliteDb('ledger.db', test=use_test_db)
+    db.disable_account(selected_choice)
+    db.close()
+
+
+@app.command()
+def enable_account(
+        use_test_db: bool = False,
+):
+    selected_choice = prompt_selected_choice(disabled_accounts)
+    db = SqliteDb('ledger.db', test=use_test_db)
+    db.enable_account(selected_choice)
+    db.close()
 
 
 @app.command()
@@ -95,19 +118,11 @@ def start_menu():
     """
     print(BLUE + "Main menu" + RESET)
     commands_dict = {command.callback.__name__: command.callback for command in app.registered_commands}
-    choices = list(commands_dict.keys())
-    choices.remove('start_menu')
-    numbered_choices = "\n".join(f"{index + 1}. {choice}" for index, choice in enumerate(choices))
-    choice = typer.prompt(f"Enter number to select:\n{numbered_choices}\t")
-    try:
-        index = int(choice) - 1
-        selected_choice = choices[index]
-        typer.echo(f"{selected_choice} selected.")
-        command_func = commands_dict[selected_choice]
-        typer.run(command_func)
-    except (ValueError, IndexError, KeyError):
-        typer.echo("Invalid choice. Please try again.")
-        start_menu()
+    actions = list(commands_dict.keys())
+    actions.remove('start_menu')
+    selected_choice = prompt_selected_choice(actions)
+    command_func = commands_dict[selected_choice]
+    typer.run(command_func)
     return selected_choice
 
 

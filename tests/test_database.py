@@ -1,4 +1,5 @@
 import pytest
+import random
 from db_layer.database import SqliteDb
 from models.accounting import Account, Category
 
@@ -77,6 +78,22 @@ def test_get_disabled_accounts(db):
     assert disabled_accounts is not None
     assert isinstance(disabled_accounts, list)
     assert all(isinstance(account, tuple) for account in disabled_accounts)
+
+
+def test_disable_and_enable_account(db):
+    # Retrieve a random account name from the database
+    db.cursor.execute("SELECT name FROM accounts")
+    account_names = [row[0] for row in db.cursor.fetchall()]
+    account_name = random.choice(account_names)
+    # test disable_account
+    disabled_account = db.disable_account(account_name)
+    assert disabled_account is not None
+    assert disabled_account[5] == 1
+    # test enable_account
+    enabled_account = db.enable_account(account_name)
+    assert enabled_account is not None
+    assert enabled_account[5] == 0
+
 
 # def test_get_category_fields_by_name(db):
 #     category_names = db.get_category_names()
