@@ -1,5 +1,6 @@
 import pytest
 import random
+from rich import print
 from db_layer.database import SqliteDb
 from models.accounting import Account, Category
 
@@ -14,7 +15,7 @@ def db():
 @pytest.mark.depends(on=['test_create_ledger'])
 def test_get_category_names(db):
     category_names = db.get_category_names()
-    print('\n', category_names, '\nfrom db:', db.filename)
+    # print('\n', category_names, '\nfrom db:', db.filename)
     assert isinstance(category_names, list)
     assert all(isinstance(name, str) for name in category_names)
 
@@ -23,9 +24,9 @@ def test_get_category_names(db):
 def test_upsert_account(db):
     test_account = Account(name='Test Account', value=100.0, category=Category(name='Assets'), remarks='Test Remarks')
     category_names = db.get_category_names()
-    print('\n')
+    # print('\n')
     for category_name in category_names:
-        print(f"Testing {category_name}")
+        # print(f"Testing {category_name}")
         test_account.category = Category(name=category_name)
         db.upsert_account(test_account)
 
@@ -68,16 +69,18 @@ def test_enabled_accounts_view(db):
 
 def test_get_enabled_accounts(db):
     enabled_accounts = db.get_accounts(enabled=True)
+    # print(enabled_accounts, 'enabled')
     assert enabled_accounts is not None
     assert isinstance(enabled_accounts, list)
-    assert all(isinstance(account, tuple) for account in enabled_accounts)
+    assert all(isinstance(account, str) for account in enabled_accounts)
 
 
 def test_get_disabled_accounts(db):
     disabled_accounts = db.get_accounts(enabled=False)
+    # print(disabled_accounts, 'disabled')
     assert disabled_accounts is not None
     assert isinstance(disabled_accounts, list)
-    assert all(isinstance(account, tuple) for account in disabled_accounts)
+    assert all(isinstance(account, str) for account in disabled_accounts)
 
 
 def test_disable_and_enable_account(db):
@@ -94,3 +97,32 @@ def test_disable_and_enable_account(db):
     assert enabled_account is not None
     assert enabled_account[5] == 0
 
+
+def test_get_subcategories(db):
+    category_names = db.get_category_names()
+    for name in category_names:
+        # print(f'Testing {name}')
+        subcategories = db.get_subcategories(name)
+        assert subcategories is not None
+        assert isinstance(subcategories, list)
+        assert all(isinstance(account, str) for account in subcategories)
+
+
+def test_get_leaf_category(db):
+    category_names = db.get_category_names()
+    for name in category_names:
+        # print(f'Testing {name}')
+        leafs = db.get_leaf_categories(name)
+        assert leafs is not None
+        assert isinstance(leafs, list)
+        assert all(isinstance(account, str) for account in leafs)
+
+
+def test_get_all_account_names_in_category(db):
+    category_names = db.get_category_names()
+    for name in category_names:
+        # print(f'Testing {name}')
+        names = db.get_all_account_names_in_category(name)
+        assert names is not None
+        assert isinstance(names, list)
+        assert all(isinstance(account, str) for account in names)

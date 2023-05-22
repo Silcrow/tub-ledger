@@ -34,7 +34,7 @@ def get_category_enums(db):
 def test_save_category(db):
     category_enums = get_category_enums(db)
     for category_enum in category_enums:
-        print(f"\nTesting {category_enum.name}")
+        # print(f"\nTesting {category_enum.name}")
         test_category = save_category(use_test_db=True, name='test category', parent=category_enum,
                                       description='test')
         assert isinstance(test_category['name'], str)
@@ -48,7 +48,7 @@ def test_save_category(db):
 def test_save_account(db):
     category_enums = get_category_enums(db)
     for category_enum in category_enums:
-        print(f"\nTesting {category_enum.name}")
+        # print(f"\nTesting {category_enum.name}")
         test_account = save_account(use_test_db=True, name='test account', value=100.0, category=category_enum,
                                     remarks='test')
         # Validate data type
