@@ -1,3 +1,9 @@
+# Define ANSI escape codes for color formatting
+COLOR_BROWN = "\033[33m"
+COLOR_GOLD = "\033[38;5;214m"
+COLOR_GRAY = "\033[37m"
+COLOR_END = "\033[0m"
+
 
 class Category:
     """
@@ -84,7 +90,17 @@ def print_composite(data, indent=0):
     :param indent: how much to indent.
     :return: none.
     """
-    print("  " * indent + data['name'] + ": " + "{:,.2f}".format(data['value']))
+
+    if data.get('name'):
+        name = data['name']
+        value = "{:,.2f}".format(data['value'])
+        indent_spaces = "  " * indent
+
+        if data.get('children'):
+            print(indent_spaces + COLOR_BROWN + name + COLOR_END + ": " + value)
+        else:
+            print(indent_spaces + COLOR_GRAY + name + COLOR_END + ": " + value)
+
     if data.get('children'):
         for child in data['children']:
             print_composite(child, indent+1)
@@ -101,7 +117,7 @@ def print_balance_sheet(db=None):
     }
 
     # Print the balance sheet from the balance_sheet_dict
-    print('\nBalance Sheet (as of March 4, 2023)')  # will need to timestamp and save each balance sheet.
+    print(COLOR_GOLD + '\nBalance Sheet' + COLOR_GRAY + ' (as of March 4, 2023)')  # will need to timestamp and save each balance sheet.
     print_composite(balance_sheet_dict['assets'])
     print_composite(balance_sheet_dict['liabilities'])
-    print('Net Worth:', "{:,.2f}".format(balance_sheet_dict['net_worth']))
+    print(COLOR_GOLD + 'Net Worth:' + COLOR_END, "{:,.2f}".format(balance_sheet_dict['net_worth']))
