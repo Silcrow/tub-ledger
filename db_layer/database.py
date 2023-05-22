@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from rich import print
 
 
 class SqliteDb:
@@ -170,6 +171,10 @@ class SqliteDb:
         print(f'\nDisabled account: {disabled_account}')
         return disabled_account
 
+    def disable_many_accounts(self, list_account_names):
+        for account in list_account_names:
+            self.disable_account(account)
+
     def enable_account(self, name):
         query = "UPDATE accounts SET is_disabled = 0 WHERE name = ?"
         self.cursor.execute(query, (name,))
@@ -178,6 +183,10 @@ class SqliteDb:
         self.connection.commit()
         print(f'\nEnabled account: {enabled_account}')
         return enabled_account
+
+    def enable_many_accounts(self, list_account_names):
+        for account in list_account_names:
+            self.enable_account(account)
 
     # did not grok
     def get_category_tree(self, name=None):
@@ -233,6 +242,46 @@ class SqliteDb:
         category_names = [row[0] for row in rows]  # extract the first column of each row
         return category_names
 
+    # did not grok
+    def get_subcategories(self, category_name):
+        query = """
+            SELECT c.name
+            FROM categories AS c
+            JOIN categories AS parent ON c.parent_id = parent.id
+            WHERE parent.name = ?
+        """
+
+        self.cursor.execute(query, (category_name,))
+        results = self.cursor.fetchall()
+
+        subcategories = [row[0] for row in results]
+        return subcategories
+
+    # did not grok
+    def get_leaf_categories(self, category_name):
+        query = """
+            WITH RECURSIVE subcategories AS (
+                SELECT id, name, parent_id
+                FROM categories
+                WHERE name = ?
+                UNION ALL
+                SELECT c.id, c.name, c.parent_id
+                FROM categories AS c
+                INNER JOIN subcategories AS sub ON c.parent_id = sub.id
+            )
+            SELECT subcategories.name
+            FROM subcategories
+            LEFT JOIN categories AS child ON subcategories.id = child.parent_id
+            WHERE child.id IS NULL
+        """
+
+        self.cursor.execute(query, (category_name,))
+        results = self.cursor.fetchall()
+        leaf_categories = [result[0] for result in results]
+        if category_name in leaf_categories:
+            leaf_categories.remove(category_name)
+        return leaf_categories
+
     def get_account_by_name(self, name):
         """
         Returns account row given name parameter.
@@ -261,5 +310,21 @@ class SqliteDb:
 
         rows = self.cursor.fetchall()
         account_names = [row[1] for row in rows]
+        return account_names
+
+    def get_all_account_names_in_category(self, name):
+        query = """
+            SELECT name FROM accounts
+            WHERE category_id = (
+                SELECT id
+                FROM categories
+                WHERE name = ?
+            )
+        """
+
+        self.cursor.execute(query, (name,))
+        results = self.cursor.fetchall()
+        account_names = [row[0] for row in results]
+
         return account_names
 

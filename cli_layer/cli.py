@@ -1,4 +1,5 @@
 import typer
+from rich import print
 
 from cli_layer.enums import CategoryChoice, enabled_accounts, prompt_selected_choice, disabled_accounts
 from models.accounting import Category, Account
@@ -42,9 +43,6 @@ def save_category(
         else:
             typer.run(start_menu)
     return kwargs
-
-
-# TODO Make disable_category
 
 
 @app.command()
@@ -103,6 +101,33 @@ def enable_account(
     db = SqliteDb('ledger.db', test=use_test_db)
     db.enable_account(selected_choice)
     db.close()
+
+
+@app.command()
+def disable_accounts_in_leaf_category(
+        use_test_db: bool = False,
+):
+    db = SqliteDb('ledger.db', test=use_test_db)
+    choices = db.get_category_names()
+    leaves = db.get_leaf_categories('Assets')
+    leaves.extend(db.get_leaf_categories('Liabilities'))
+    selected_choice = prompt_selected_choice(choices, leaves)
+    subcategories = db.get_subcategories(selected_choice)
+    if len(subcategories) != 0:
+        print(f'{selected_choice} has subcategories {subcategories}.'
+              f' Refuse to disable. Select an indented leaf category.')
+        db.close()
+        typer.run(disable_accounts_in_leaf_category)
+    else:
+        child_accounts = db.get_all_account_names_in_category(selected_choice)
+        print(f'{selected_choice} is a leaf category with accounts:', child_accounts)
+        if typer.confirm("Do you want to disable?", default=True):
+            db.disable_many_accounts(child_accounts)
+            db.close()
+            typer.run(start_menu)
+        else:
+            db.close()
+            typer.run(start_menu)
 
 
 @app.command()

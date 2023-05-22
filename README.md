@@ -24,6 +24,10 @@ python -m cli_layer.cli --help
 - make sure to add Assets and Liabilities category at any initial run, so that adding an account and not finding categories is impossible.
 - creating Enum class or declaring sqlite db in cli.py, then importing it to test files will cause a glitch where it produces
 such files in the test dir.
+- BUG: noticed since making `disable_accounts_in_leaf_category` that cli.py
+somehow loads and prints list of enabled accounts.
 ## Features Skipped
 - `save_account` takes choice via typed input, but I want arrow keys and enter like click.
 Consider displaying the hierarchy of the categories to the user when they are selecting a category.
+- `enable_accounts` cli prompting user until you get a list of disabled accounts to disable.
+Then trigger `enable_many_accounts`.

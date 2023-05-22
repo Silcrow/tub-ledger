@@ -1,4 +1,5 @@
 from enum import Enum
+from rich import print
 
 import typer
 
@@ -43,13 +44,21 @@ enabled_accounts = load_accounts(enabled=True)
 disabled_accounts = load_accounts(enabled=False)
 
 
-def prompt_selected_choice(choices):
+def prompt_selected_choice(choices, matching_items=None):
     """
-    Turns a list of string into numbered choices for prompt.
+    Turns a list of strings into numbered choices for prompt, indenting matching items if provided.
     :param choices: list
+    :param matching_items: list (optional)
     :return: str
     """
-    numbered_choices = "\n".join(f"{index + 1}. {choice}" for index, choice in enumerate(choices))
+    tab_choices = []
+    for index, choice in enumerate(choices):
+        if matching_items and choice in matching_items:
+            tab_choices.append(f"\t{index + 1}. {choice}")
+        else:
+            tab_choices.append(f"{index + 1}. {choice}")
+    numbered_choices = "\n".join(tab_choices)
+
     choice = typer.prompt(f"Enter number to select:\n{numbered_choices}\t")
     try:
         index = int(choice) - 1
@@ -59,3 +68,5 @@ def prompt_selected_choice(choices):
     except (ValueError, IndexError):
         typer.echo("Invalid choice. Please try again.")
         return prompt_selected_choice(choices)
+        return prompt_selected_choice(choices, matching_items)
+
