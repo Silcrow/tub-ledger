@@ -1,3 +1,4 @@
+from rich import print
 # Define ANSI escape codes for color formatting
 COLOR_BROWN = "\033[33m"
 COLOR_GOLD = "\033[38;5;214m"
